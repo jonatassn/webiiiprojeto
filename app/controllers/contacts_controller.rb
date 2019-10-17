@@ -1,12 +1,27 @@
 class ContactsController < ApplicationController
-  before_action :set_contact, only: [:show, :edit, :update, :destroy]
-  before_action :authenticate_user!#, except: [:index]
-
-  # GET /contacts
-  # GET /contacts.json
-  def index
-    @contacts = current_user.contacts
-  end
+    before_action :set_contact, only: [:show, :edit, :update, :destroy]
+    before_action :authenticate_user!#, except: [:index]
+    
+    # GET /contacts
+    # GET /contacts.json
+    def index
+        @contacts = current_user.contacts.joins(:kind, :company).includes(:kind, :company)
+    end
+  
+    def search
+        @kinds = Kind.all
+        if params[:search]
+            @term = params[:search][:term]
+            @kind_id = params[:search][:kind_id]
+            @contacts = current_user.contacts.joins(:kind, :company).includes(:kind, :company).where('contacts.name like ?', "%#{@term}%")
+            
+            @contacts = @contacts.where(kind_id: @kind_id) unless @kind_id.blank?
+        else
+            @contacts = Contact.none
+        end
+    end
+      
+    
 
   # GET /contacts/1
   # GET /contacts/1.json
